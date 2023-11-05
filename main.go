@@ -102,15 +102,6 @@ func main() {
 		panic("could not determine underlying type for enum")
 	}
 
-	visited := make(map[string]bool, 0)
-	for i := range enumValues{
-		if visited[enumValues[i].Value] == true{
-			panic("no duplicate values allowed in enum")
-		} else {
-			visited[enumValues[i].Value] = true
-		}
-	}
-
 	templates, err := template.New("").
 		Funcs(TemplateFunctions). // Custom functions
 		ParseFS(templates, "templates/*.tmpl")
@@ -230,16 +221,48 @@ func receiver(s string) string {
 	return fmt.Sprintf("%s_enum", strings.ToLower(s))
 }
 
+func duplicateValues(compareValue values.EnumValue, valuesList []values.EnumValue) []values.EnumValue {
+	var duplicates []values.EnumValue
+	for i:=0; i<len(valuesList); i++{
+		if valuesList[i].Value == compareValue.Value {
+			// duplicates = append(duplicates, i
+			duplicates = append(duplicates, valuesList[i])
+		}
+	}
+	return duplicates
+}
+
+func uniqueValues(valueList []values.EnumValue) []values.EnumValue {
+	var list []values.EnumValue
+    visited := make(map[string]bool, 0)
+		for i:=0; i<len(valueList); i++{
+		   if visited[valueList[i].Value] == true{
+				continue
+		   } else {
+			  visited[valueList[i].Value] = true
+				list = append(list, valueList[i])
+		   }
+		}
+    return list
+}
+
+func minus(A int, B int) int {
+	return A - B
+}
+
 var TemplateFunctions = template.FuncMap{
-	"containsString": util.Contains[string],
-	"lower":          strings.ToLower,
-	"camel":          coerce.CamelCase,
-	"pascal":         coerce.PascalCase,
-	"upperSnake":     coerce.UpperSnakeCase,
-	"plural":         pluralize.NewClient().Plural,
-	"stringer":       stringer,
-	"stringerFn":     stringerFn,
-	"receiver":       receiver,
+	"minus":			minus,
+	"containsString": 	util.Contains[string],
+	"lower":          	strings.ToLower,
+	"camel":          	coerce.CamelCase,
+	"pascal":         	coerce.PascalCase,
+	"upperSnake":     	coerce.UpperSnakeCase,
+	"plural":         	pluralize.NewClient().Plural,
+	"stringer":       	stringer,
+	"stringerFn":     	stringerFn,
+	"receiver":       	receiver,
+	"duplicateValues": 	duplicateValues,
+	"uniqueValues": 	uniqueValues,
 }
 
 type TemplateData struct {

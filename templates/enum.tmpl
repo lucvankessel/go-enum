@@ -45,12 +45,15 @@ func To{{ $t }}(value {{ $.BaseType }}) {{ $t }} {
 
 func ({{ $lt }} {{ $t }}) String() string {
 	switch {{ $lt }} {
-	{{- range $index, $enum := $.EnumValues }}
-	case {{ $enum.Name }}:
+	{{- $uniqueValues := uniqueValues $.EnumValues }}
+	{{- range $uniqueIndex, $uniqueValue := $uniqueValues}}
+	{{- $duplicateValues := duplicateValues $uniqueValue $.EnumValues}}
+	case {{ range $index, $enum := $duplicateValues}} {{- if lt $index (minus (len $duplicateValues) 1) }}{{ $enum.Name }},
+	{{- else }}{{ $enum.Name }}: {{- end -}}
+	{{- end -}}
 	{{- if eq $.BaseType "string" }}
-		return {{ $enum.Value }} 
-	{{- else }}
-		return "{{ stringer $enum.Name }}"
+		return {{ $uniqueValue.Value }} {{ else }}
+		return "{{ stringer $uniqueValue.Name }}"
 	{{- end }}
 	{{- end }}
 	default:
